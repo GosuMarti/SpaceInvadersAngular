@@ -26,15 +26,18 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              }
+                "src/assets",
+                "src/favicon.ico"
             ],
             "styles": [
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              "src/assets/js/login.js",
+              "src/assets/js/play.js",
+              "src/assets/js/preferences.js",
+              "src/assets/js/records.js"
+            ]
           },
           "configurations": {
             "production": {
