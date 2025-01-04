@@ -18,7 +18,6 @@ export class PlayComponent implements AfterViewInit {
   private c!: CanvasRenderingContext2D;
   private player!: Player;
   private grids: Grid[] = [];
-  private missiles: Missile[] = [];
 
   ngAfterViewInit() {
     const canvas = this.canvasRef.nativeElement;
@@ -37,7 +36,7 @@ export class PlayComponent implements AfterViewInit {
     const scoreEL = document.querySelector('#scoreEl')!;
     const timeEL = document.querySelector('#timeEl')!;
 
-    this.player = new Player(this.c, this.canvasRef.nativeElement, this.missiles);
+    this.player = new Player(this.c, this.canvasRef.nativeElement, this);
     this.grids.push(new Grid(this.c, savedUFOs, this.canvasRef.nativeElement));
 
     // Timer
@@ -47,7 +46,16 @@ export class PlayComponent implements AfterViewInit {
         clearInterval(interval);
         timeEL.textContent = "Time's up!";
         this.gameActive = false;
-        scoreEL.textContent = this.score.toString();
+
+        // Calculate final score based on time and number of UFOs
+        const minutes = savedTime / 60;
+        let finalScore = this.score / minutes;
+
+        if (savedUFOs > 1) {
+          finalScore -= 50 * (savedUFOs - 1);
+        }
+
+        scoreEL.textContent = Math.max(0, Math.floor(finalScore)).toString();
       }
       this.time--;
     }, 1000);
@@ -60,8 +68,7 @@ export class PlayComponent implements AfterViewInit {
 
       if (this.gameActive) {
         this.player.update();
-        this.grids.forEach(grid => grid.update(this.player, this.missiles, this));
-        this.missiles.forEach(missile => missile.update());
+        this.grids.forEach(grid => grid.update(this.player, this));
       }
     };
     animate();
@@ -69,6 +76,11 @@ export class PlayComponent implements AfterViewInit {
 
   addScore(points: number) {
     this.score += points;
+    document.querySelector('#scoreEl')!.textContent = this.score.toString();
+  }
+
+  deductScore(points: number) {
+    this.score -= points;
     document.querySelector('#scoreEl')!.textContent = this.score.toString();
   }
 }
@@ -80,10 +92,16 @@ class Player {
   image: HTMLImageElement = new Image();
   ready = false;
 
+  // Track the state of movement keys
+  private keys = {
+    a: false,
+    d: false
+  };
+
   constructor(
     private c: CanvasRenderingContext2D,
     private canvas: HTMLCanvasElement,
-    private missiles: Missile[]
+    private component: PlayComponent
   ) {
     this.image.src = 'assets/img/missile.png';
     this.image.onload = () => {
@@ -106,51 +124,73 @@ class Player {
 
   update() {
     this.draw();
-    this.position.x += this.velocity.x;
 
-    if (this.position.x < 0) this.position.x = 0;
-    if (this.position.x + 50 > this.canvas.width) this.position.x = this.canvas.width - 50;
+    // Disable horizontal movement if the player is in the air
+    if (this.velocity.y !== 0) {
+      this.velocity.x = 0; // Force horizontal velocity to 0 while in the air
+    } else {
+      // Calculate horizontal velocity based on key states
+      if (this.keys.a && !this.keys.d) {
+        this.velocity.x = -5; // Move left
+      } else if (this.keys.d && !this.keys.a) {
+        this.velocity.x = 5; // Move right
+      } else {
+        this.velocity.x = 0; // Stop if both keys are pressed or neither is pressed
+      }
+    }
+
+    // Update player position
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+
+    // Prevent player from going off the screen on the sides
+    if (this.position.x < 0) {
+      this.position.x = 0; // Clamp to left edge
+    } else if (this.position.x + 50 > this.canvas.width) {
+      this.position.x = this.canvas.width - 50; // Clamp to right edge
+    }
+
+    // Reset position and deduct points if player goes off the top of the canvas
+    if (this.position.y + 50 < 0) {
+      this.component.deductScore(25); // Deduct 25 points
+      this.resetPosition();
+    }
+  }
+
+  resetPosition() {
+    this.position = {
+      x: this.canvas.width / 2 - 25,
+      y: this.canvas.height - 100
+    };
+    this.velocity.y = 0;
   }
 
   handleKeyDown(event: KeyboardEvent) {
     switch (event.key) {
       case 'a':
-        this.velocity.x = -5;
+        this.keys.a = true; // Mark 'a' as pressed
         break;
       case 'd':
-        this.velocity.x = 5;
+        this.keys.d = true; // Mark 'd' as pressed
         break;
       case ' ':
-        this.missiles.push(new Missile(this.c, this.position.x + 20, this.position.y));
+        // Shoot the player upwards only if they are not already in the air
+        if (this.velocity.y === 0) {
+          this.velocity.y = -10;
+        }
         break;
     }
   }
 
   handleKeyUp(event: KeyboardEvent) {
-    if (event.key === 'a' || event.key === 'd') this.velocity.x = 0;
-  }
-}
-
-// Missile Class
-class Missile {
-  position: { x: number; y: number };
-  velocity = { x: 0, y: -10 };
-  width = 5;
-  height = 20;
-  color = 'red';
-
-  constructor(private c: CanvasRenderingContext2D, x: number, y: number) {
-    this.position = { x, y };
-  }
-
-  draw() {
-    this.c.fillStyle = this.color;
-    this.c.fillRect(this.position.x, this.position.y, this.width, this.height);
-  }
-
-  update() {
-    this.position.y += this.velocity.y;
-    this.draw();
+    switch (event.key) {
+      case 'a':
+        this.keys.a = false; // Mark 'a' as released
+        break;
+      case 'd':
+        this.keys.d = false; // Mark 'd' as released
+        break;
+    }
   }
 }
 
@@ -208,15 +248,14 @@ class Invader {
 class Grid {
   invaders: Invader[] = [];
 
-  checkCollision(missile: Missile, invader: Invader): boolean {
+  checkCollision(player: Player, invader: Invader): boolean {
     return (
-      missile.position.x < invader.position.x + 50 &&
-      missile.position.x + missile.width > invader.position.x &&
-      missile.position.y < invader.position.y + 50 &&
-      missile.position.y + missile.height > invader.position.y
+      player.position.x < invader.position.x + 50 &&
+      player.position.x + 50 > invader.position.x &&
+      player.position.y < invader.position.y + 50 &&
+      player.position.y + 50 > invader.position.y
     );
   }
-  
 
   constructor(private c: CanvasRenderingContext2D, numberOfUFOs: number, private canvas: HTMLCanvasElement) {
     for (let i = 0; i < numberOfUFOs; i++) {
@@ -228,18 +267,16 @@ class Grid {
     }
   }
 
-  update(player: Player, missiles: Missile[], component: PlayComponent) {
+  update(player: Player, component: PlayComponent) {
     this.invaders.forEach(invader => {
       invader.update();
-      
-      // Collision detection with missiles
-      missiles.forEach((missile, missileIndex) => {
-        if (this.checkCollision(missile, invader) && !invader.isDestroyed) {
-          invader.isDestroyed = true;
-          missiles.splice(missileIndex, 1);
-          component.addScore(100);
-        }
-      });
+
+      // Collision detection with player
+      if (this.checkCollision(player, invader) && !invader.isDestroyed) {
+        invader.isDestroyed = true;
+        component.addScore(100); // Add 100 points for destroying a UFO
+        player.resetPosition();
+      }
     });
   }
 }
