@@ -34,7 +34,6 @@
             ],
             "scripts": [
               "src/assets/js/login.js",
-              "src/assets/js/play.js",
               "src/assets/js/preferences.js",
               "src/assets/js/records.js"
             ]
