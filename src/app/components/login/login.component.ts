@@ -52,19 +52,3 @@ export class LoginComponent {
   }
 }
 
-// onSubmit(): void {
-//   this.authService.login(this.username, this.password).subscribe(
-//     response => {
-//       const token = response.headers.get('Authorization');
-//       if (token) {
-//         this.authService.saveToken(token);
-//         alert('Login successful!');
-//         this.router.navigate(['/home']); // Redirect to home or any other page
-//       }
-//     },
-//     error => {
-//       alert('Login failed: ' + error.message);
-//     }
-//   );
-// }
-
