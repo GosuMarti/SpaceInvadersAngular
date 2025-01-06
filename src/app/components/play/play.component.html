@@ -1,0 +1,16 @@
+<body class="ufo-page">
+  <div id="scoreboard">
+    <span>Score: </span><span id="scoreEl">0</span>
+    <br>
+    <span>Time left: </span><span id="timeEl"></span>
+  </div>
+  <div class="canvas-container">
+    <canvas #gameCanvas></canvas>
+  </div>
+
+  <!-- Add this container for the "Record Score" button -->
+  <!-- <div *ngIf="gameEnded && authService.isLoggedIn()" class="record-score-container" id="scoreEl">
+    <p>Your final score: 0</p>
+    <button (click)="recordScore()">Record Score</button>
+  </div> -->
+</body>

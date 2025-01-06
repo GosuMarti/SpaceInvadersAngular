@@ -1,0 +1,17 @@
+<div class="content">
+    <div class="form-container">
+      <h2>Login</h2>
+      <form>
+        <label for="username">Username:</label>
+        <input type="text" id="username" [(ngModel)]="apiLoginObj.username" name="username" required>
+  
+        <label for="password">Password:</label>
+        <input type="password" id="password" [(ngModel)]="apiLoginObj.password" name="password" required>
+  
+        <button type="submit" class="form-btn" (click)="onLogin()" >Login</button>
+        <p>Don't have an account? <a routerLink="/register">Register here</a></p>
+      </form>
+      <p id="loginMessage"></p>
+    </div>
+  </div>
+  <router-outlet />

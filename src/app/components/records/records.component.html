@@ -1,0 +1,52 @@
+<div class="content" [ngClass]="{'centered-content': !isLoggedIn}">
+    <div class="table-container">
+      <h1>Top 10 Records</h1>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Username</th>
+            <th>Punctuation</th>
+            <th>UFOs</th>
+            <th>Disposed Time</th>
+            <th>Record Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let record of topRecords; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ record.username }}</td>
+            <td>{{ record.punctuation }}</td>
+            <td>{{ record.ufos }}</td>
+            <td>{{ record.disposedTime }}</td>
+            <td>{{ formatDate(record.recordDate) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  
+    <div *ngIf="isLoggedIn" class="table-container">
+      <h1>Your Records</h1>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Punctuation</th>
+            <th>UFOs</th>
+            <th>Disposed Time</th>
+            <th>Record Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let record of userRecords">
+            <td>{{ record.username }}</td>
+            <td>{{ record.punctuation }}</td>
+            <td>{{ record.ufos }}</td>
+            <td>{{ record.disposedTime }}</td>
+            <td>{{ formatDate(record.recordDate) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  

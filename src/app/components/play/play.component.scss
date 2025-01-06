@@ -1,0 +1,57 @@
+.ufo-page {
+    height: 100vh; /* Set the full viewport height */
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevent scrolling */
+    background-color: #000; /* Set background color to black */
+  }
+  
+  .ufo-page .canvas-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .ufo-page canvas {
+    width: 100%;
+    height: calc(100vh - 75px); /* Adjust for the navbar height */
+    background-color: black;
+    display: block;
+  }
+  
+  /* Scoreboard styling */
+  .ufo-page #scoreboard {
+    position: fixed;
+    top: 75px; /* Place it below the navbar */
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.7); /* Translucent black background */
+    color: #ffffff !important; /* Force text color to be white */
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+
+  .record-score-container {
+    margin-top: 20px;
+    text-align: center;
+  
+    p {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+  
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #4CAF50; /* Green background */
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+  
+      &:hover {
+        background-color: #45a049; /* Darker green on hover */
+      }
+    }
+  }
