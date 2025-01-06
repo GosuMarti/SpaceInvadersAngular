@@ -7,7 +7,7 @@ import { HttpClientModule } from '@angular/common/http';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ FormsModule, RouterOutlet, HttpClientModule ],
+  imports: [ FormsModule, RouterOutlet, HttpClientModule, RouterModule ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
@@ -37,6 +37,7 @@ export class LoginComponent {
         if (token) {
           localStorage.setItem("token", token);
           localStorage.setItem("username", this.apiLoginObj.username);
+          alert('Login successful!');
           this.router.navigateByUrl('/records');
         } else {
           alert('Login successful but no token received.');
