@@ -18,12 +18,15 @@
             </a>
         </div>
         <div class="auth-buttons">
-            <a class="auth-btn" routerLink="/register">
-                Register <img src="app/assets/img/icons/register.png" alt="Register Icon" class="icon">
+            <a class="auth-btn" *ngIf="!isLoggedIn" routerLink="/register">
+              Register <img src="app/assets/img/icons/register.png" alt="Register Icon" class="icon">
             </a>
-            <a class="auth-btn" routerLink="/login">
-                Login <img src="app/assets/img/icons/login.png" alt="Login Icon" class="icon">
+            <a class="auth-btn" *ngIf="!isLoggedIn" routerLink="/login">
+              Login <img src="app/assets/img/icons/login.png" alt="Login Icon" class="icon">
             </a>
-        </div>
+            <a class="auth-btn" *ngIf="isLoggedIn" (click)="onLogout()">
+              Logout <img src="app/assets/img/icons/login.png" alt="Logout Icon" class="icon">
+            </a>
+          </div>          
     </div>
     <router-outlet />
