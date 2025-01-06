@@ -26,16 +26,16 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-                "src/assets",
+                "src/app/assets",
                 "src/favicon.ico"
             ],
             "styles": [
               "src/styles.scss"
             ],
             "scripts": [
-              "src/assets/js/login.js",
-              "src/assets/js/preferences.js",
-              "src/assets/js/records.js"
+              "src/app/assets/js/login.js",
+              "src/app/assets/js/preferences.js",
+              "src/app/assets/js/records.js"
             ]
           },
           "configurations": {
