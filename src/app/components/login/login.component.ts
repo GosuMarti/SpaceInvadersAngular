@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { HttpClient, provideHttpClient, withFetch } from '@angular/common/http';
 import { HttpClientModule } from '@angular/common/http';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -23,20 +24,21 @@ export class LoginComponent {
     "password": ""
   };
 
-  router = inject(Router);
-  http = inject(HttpClient);
-  
+  constructor(private http: HttpClient, private router: Router, private authService: AuthService) {}
+
   onLogin() {
     const params = {
       username: this.apiLoginObj.username,
       password: this.apiLoginObj.password
     };
+
     this.http.get("http://wd.etsisi.upm.es:10000/users/login", { params, observe: 'response' }).subscribe(
       (response: any) => {
         const token = response.headers.get('Authorization');
         if (token) {
           localStorage.setItem("token", token);
           localStorage.setItem("username", this.apiLoginObj.username);
+          this.authService.setLoginStatus(true);
           alert('Login successful!');
           this.router.navigateByUrl('/records');
         } else {
@@ -48,9 +50,6 @@ export class LoginComponent {
       }
     );
   }
-  
-  
-  
 }
 
 // onSubmit(): void {
