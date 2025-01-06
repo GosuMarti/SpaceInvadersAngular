@@ -39,19 +39,20 @@
     p {
       font-size: 1.2em;
       margin-bottom: 10px;
+      color: #ffffff;
     }
   
     button {
       padding: 10px 20px;
       font-size: 1em;
-      background-color: #4CAF50; /* Green background */
+      background-color: #517ea1; /* Green background */
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
   
       &:hover {
-        background-color: #45a049; /* Darker green on hover */
+        background-color: #396f98; /* Darker green on hover */
       }
     }
   }
