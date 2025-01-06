@@ -1,22 +1,18 @@
 <div class="preferences-container">
     <h2>Preferences</h2>
-    <form id="preferencesForm">
-        <label for="numberOfUFOs">Number of UFOs:</label>
-        <select id="numberOfUFOs">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-        </select>
-
-        <label for="timeLimit">Time (seconds):</label>
-        <select id="timeLimit">
-            <option value="60">60</option>
-            <option value="120">120</option>
-            <option value="180">180</option>
-        </select>
-
-        <button type="button" onclick="savePreferences()">Accept</button>
+    <form>
+      <label for="numberOfUFOs">Number of UFOs:</label>
+      <select id="numberOfUFOs" [(ngModel)]="numberOfUFOs" name="numberOfUFOs">
+        <option *ngFor="let ufo of ufoOptions" [value]="ufo">{{ ufo }}</option>
+      </select>
+  
+      <label for="timeLimit">Time (seconds):</label>
+      <select id="timeLimit" [(ngModel)]="timeLimit" name="timeLimit">
+        <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+      </select>
+  
+      <button type="button" (click)="savePreferences()">Accept</button>
     </form>
-</div>
+  </div>
+  <router-outlet />
+  
