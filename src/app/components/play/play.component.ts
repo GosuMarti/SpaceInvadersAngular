@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, AfterViewInit, ElementRef, ViewChild, ViewEncapsulation } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-play',
@@ -15,19 +17,26 @@ export class PlayComponent implements AfterViewInit {
   @ViewChild('gameCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
   score = 0;
   time = 60;
+  scoreTime = 0;
   gameActive = true;
   gameEnded = false;
   finalScore = 0;
+  loggedIn = false;
   private c!: CanvasRenderingContext2D;
   private player!: Player;
   private grids: Grid[] = [];
 
+  constructor(private http: HttpClient, private authService: AuthService) { }
 
   ngAfterViewInit() {
     const canvas = this.canvasRef.nativeElement;
     this.c = canvas.getContext('2d')!;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    this.authService.isLoggedIn$.subscribe((status) => {
+      this.loggedIn = status;
+    });
 
     this.startGame();
   }
@@ -36,13 +45,14 @@ export class PlayComponent implements AfterViewInit {
     const savedUFOs = parseInt(localStorage.getItem('numberOfUFOs') || '1', 10);
     const savedTime = parseInt(localStorage.getItem('timeLimit') || '60', 10);
     this.time = savedTime;
-  
+    this.scoreTime = savedTime;
+
     const scoreEL = document.querySelector('#scoreEl')!;
     const timeEL = document.querySelector('#timeEl')!;
-  
+
     this.player = new Player(this.c, this.canvasRef.nativeElement, this);
     this.grids.push(new Grid(this.c, savedUFOs, this.canvasRef.nativeElement));
-  
+
     // Timer
     const interval = setInterval(() => {
       timeEL.textContent = this.time.toString();
@@ -50,23 +60,21 @@ export class PlayComponent implements AfterViewInit {
         clearInterval(interval);
         timeEL.textContent = "Time's up!";
         this.gameActive = false;
-        this.gameEnded = true; // <-- Set gameEnded to true
-  
-        // Calculate final score based on time and number of UFOs
+        this.gameEnded = true;
+
         const minutes = savedTime / 60;
         let finalScore = this.score / minutes;
-  
+
         if (savedUFOs > 1) {
           finalScore -= 50 * (savedUFOs - 1);
         }
-  
-        this.finalScore = Math.max(0, Math.floor(finalScore)); // <-- Store final score
+
+        this.finalScore = Math.max(0, Math.floor(finalScore));
         scoreEL.textContent = this.finalScore.toString();
       }
       this.time--;
     }, 1000);
 
-    // Game loop
     const animate = () => {
       requestAnimationFrame(animate);
       this.c.fillStyle = 'black';
@@ -74,7 +82,7 @@ export class PlayComponent implements AfterViewInit {
 
       if (this.gameActive) {
         this.player.update();
-        this.grids.forEach(grid => grid.update(this.player, this));
+        this.grids.forEach((grid) => grid.update(this.player, this));
       }
     };
     animate();
@@ -89,6 +97,29 @@ export class PlayComponent implements AfterViewInit {
     this.score -= points;
     document.querySelector('#scoreEl')!.textContent = this.score.toString();
   }
+
+  recordScore() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('You must be logged in to record your score!');
+      return;
+    }
+
+    const payload = {
+      punctuation: this.finalScore,
+      ufos: parseInt(localStorage.getItem('numberOfUFOs') || '1', 10),
+      disposedTime: this.scoreTime,
+    };
+
+    this.http
+      .post('http://wd.etsisi.upm.es:10000/records', payload, {
+        headers: { Authorization: token },
+      })
+      .subscribe({
+        next: () => alert('Score recorded successfully!'),
+        error: (err) => alert('Failed to record score: ' + err.message),
+      });
+  }
 }
 
 // Player Class
@@ -98,7 +129,6 @@ class Player {
   image: HTMLImageElement = new Image();
   ready = false;
 
-  // Track the state of movement keys
   private keys = {
     a: false,
     d: false
@@ -133,32 +163,28 @@ class Player {
 
     // Disable horizontal movement if the player is in the air
     if (this.velocity.y !== 0) {
-      this.velocity.x = 0; // Force horizontal velocity to 0 while in the air
+      this.velocity.x = 0;
     } else {
-      // Calculate horizontal velocity based on key states
       if (this.keys.a && !this.keys.d) {
-        this.velocity.x = -5; // Move left
+        this.velocity.x = -5;
       } else if (this.keys.d && !this.keys.a) {
-        this.velocity.x = 5; // Move right
+        this.velocity.x = 5;
       } else {
-        this.velocity.x = 0; // Stop if both keys are pressed or neither is pressed
+        this.velocity.x = 0;
       }
     }
 
-    // Update player position
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
 
-    // Prevent player from going off the screen on the sides
     if (this.position.x < 0) {
-      this.position.x = 0; // Clamp to left edge
+      this.position.x = 0;
     } else if (this.position.x + 50 > this.canvas.width) {
-      this.position.x = this.canvas.width - 50; // Clamp to right edge
+      this.position.x = this.canvas.width - 50;
     }
 
-    // Reset position and deduct points if player goes off the top of the canvas
     if (this.position.y + 50 < 0) {
-      this.component.deductScore(25); // Deduct 25 points
+      this.component.deductScore(25);
       this.resetPosition();
     }
   }
@@ -174,13 +200,12 @@ class Player {
   handleKeyDown(event: KeyboardEvent) {
     switch (event.key) {
       case 'a':
-        this.keys.a = true; // Mark 'a' as pressed
+        this.keys.a = true;
         break;
       case 'd':
-        this.keys.d = true; // Mark 'd' as pressed
+        this.keys.d = true;
         break;
       case ' ':
-        // Shoot the player upwards only if they are not already in the air
         if (this.velocity.y === 0) {
           this.velocity.y = -10;
         }
@@ -191,16 +216,15 @@ class Player {
   handleKeyUp(event: KeyboardEvent) {
     switch (event.key) {
       case 'a':
-        this.keys.a = false; // Mark 'a' as released
+        this.keys.a = false;
         break;
       case 'd':
-        this.keys.d = false; // Mark 'd' as released
+        this.keys.d = false;
         break;
     }
   }
 }
 
-// Invader Class (UFOs)
 class Invader {
   position: { x: number; y: number };
   velocity = { x: Math.random() < 0.5 ? -2 : 2, y: 0 };
@@ -250,7 +274,6 @@ class Invader {
   }
 }
 
-// Grid Class (Spawns Invaders)
 class Grid {
   invaders: Invader[] = [];
 
@@ -280,7 +303,7 @@ class Grid {
       // Collision detection with player
       if (this.checkCollision(player, invader) && !invader.isDestroyed) {
         invader.isDestroyed = true;
-        component.addScore(100); // Add 100 points for destroying a UFO
+        component.addScore(100);
         player.resetPosition();
       }
     });
