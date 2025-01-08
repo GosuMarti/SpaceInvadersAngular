@@ -18,7 +18,15 @@ export class AuthService {
     this.loggedIn.next(isLoggedIn);
   }
 
-  autoLogout() {
+  setUsername(username: string): void {
+    localStorage.setItem('username', username);
+  }
+
+  getUsername(): string {
+    return localStorage.getItem('username') || '';
+  }
+
+  autoLogout(): void {
     const expirationTime = localStorage.getItem('tokenExpiration');
     if (!expirationTime) return;
 
@@ -32,7 +40,7 @@ export class AuthService {
     }
   }
 
-  logout() {
+  logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('tokenExpiration');
     localStorage.removeItem('username');
