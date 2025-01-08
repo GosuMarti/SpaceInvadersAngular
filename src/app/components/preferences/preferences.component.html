@@ -11,7 +11,9 @@
         <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
       </select>
   
-      <button type="button" (click)="savePreferences()">Accept</button>
+      <button type="button" (click)="savePreferences()">Save localy</button>
+      <button type="button" *ngIf="isLoggedIn" (click)="saveToServer()" >Save to server</button>
+      <button type="button" *ngIf="isLoggedIn" (click)="getFromServer()">Get from server</button>
     </form>
   </div>
   <router-outlet />
