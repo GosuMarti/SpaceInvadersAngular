@@ -38,11 +38,15 @@ export class LoginComponent {
         if (token) {
           const currentTime = new Date().getTime();
           const expirationTime = currentTime + 10 * 60 * 1000;
+
           localStorage.setItem("token", token);
           localStorage.setItem("tokenExpiration", expirationTime.toString());
           localStorage.setItem("username", this.apiLoginObj.username);
+
           this.authService.setLoginStatus(true);
           this.authService.autoLogout();
+          this.authService.setUsername(this.apiLoginObj.username);
+
           alert('Login successful!');
           this.router.navigateByUrl('/records');
         } else {
