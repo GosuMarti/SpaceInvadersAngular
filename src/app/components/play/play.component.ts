@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, AfterViewInit, ElementRef, ViewChild, ViewEncapsulation } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 
@@ -25,8 +25,9 @@ export class PlayComponent implements AfterViewInit {
   private c!: CanvasRenderingContext2D;
   private player!: Player;
   private grids: Grid[] = [];
+  currentPreferences: { ufos: number; time: number } = { ufos: 1, time: 60 };
 
-  constructor(private http: HttpClient, private authService: AuthService) { }
+  constructor(private http: HttpClient, private authService: AuthService, private route: ActivatedRoute) { }
 
   ngAfterViewInit() {
     const canvas = this.canvasRef.nativeElement;
@@ -38,12 +39,20 @@ export class PlayComponent implements AfterViewInit {
       this.loggedIn = status;
     });
 
-    this.startGame();
+    this.route.queryParams.subscribe((params: { [key: string]: any }) => {
+      const ufos = params['ufos'] ? parseInt(params['ufos'], 10) : undefined;
+      const time = params['time'] ? parseInt(params['time'], 10) : undefined;
+  
+      this.startGame({ ufos, time });
+    });
   }
 
-  startGame() {
-    const savedUFOs = parseInt(localStorage.getItem('numberOfUFOs') || '1', 10);
-    const savedTime = parseInt(localStorage.getItem('timeLimit') || '60', 10);
+  startGame(preferences?: { ufos?: number; time?: number }): void {
+    const savedUFOs = preferences?.ufos || parseInt(localStorage.getItem('numberOfUFOs') || '1', 10);
+    const savedTime = preferences?.time || parseInt(localStorage.getItem('timeLimit') || '60', 10);
+
+    this.currentPreferences = { ufos: savedUFOs, time: savedTime };
+
     this.time = savedTime;
     this.scoreTime = savedTime;
 
@@ -98,28 +107,28 @@ export class PlayComponent implements AfterViewInit {
     document.querySelector('#scoreEl')!.textContent = this.score.toString();
   }
 
-  recordScore() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('You must be logged in to record your score!');
-      return;
+    recordScore() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('You must be logged in to record your score!');
+        return;
+      }
+
+      const payload = {
+        punctuation: this.finalScore,
+        ufos: this.currentPreferences.ufos,
+        disposedTime: this.currentPreferences.time
+      };
+
+      this.http
+        .post('http://wd.etsisi.upm.es:10000/records', payload, {
+          headers: { Authorization: token },
+        })
+        .subscribe({
+          next: () => alert('Score recorded successfully!'),
+          error: (err) => alert('Failed to record score: ' + err.message),
+        });
     }
-
-    const payload = {
-      punctuation: this.finalScore,
-      ufos: parseInt(localStorage.getItem('numberOfUFOs') || '1', 10),
-      disposedTime: this.scoreTime,
-    };
-
-    this.http
-      .post('http://wd.etsisi.upm.es:10000/records', payload, {
-        headers: { Authorization: token },
-      })
-      .subscribe({
-        next: () => alert('Score recorded successfully!'),
-        error: (err) => alert('Failed to record score: ' + err.message),
-      });
-  }
 }
 
 // Player Class
